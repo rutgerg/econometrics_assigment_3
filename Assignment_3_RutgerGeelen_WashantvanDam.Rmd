@@ -1,0 +1,61 @@
+---
+title: "Assignment_3_RutgerGeelen_WashantvanDam"
+author: "Rutger Geelen (13510517) and Washant van Dam (13510053)"
+date: "December 8th, 2020"
+output:
+  
+  pdf_document: 
+    fig_width: 5
+    fig_height: 3
+    fig_caption: yes
+---
+## Preparation
+
+Clear workspace and load the required packages:
+```{r}
+rm(list=ls())
+suppressMessages(library("lmtest"))
+suppressMessages(library("car"))
+library("sandwich")
+suppressMessages(library("ggplot2"))
+library("rmarkdown")
+library ("survival")
+suppressMessages (library ("stargazer"))
+library ("rbibutils")
+library ("plm")
+library ("ivreg")
+```
+
+# Q1
+_We analyse annual data on the S&P 500 stock market index and related time series, with observations over the period 1871–2015. The data are given in SP500.csv, and the variables are defined as follows:_  
+_- P     S&P 500 index (value-weighted average of stock prices of 500 important US companies)_  
+_- D     DAnnual (value-weighted average) dividend per share on the stocks in the index_  
+_- Rs    Short-term (one-year) US interest rate_  
+_- Rl    Long-term (10-year) US interest rate_  
+_- CPI   Consumper price index_  
+_- lrp   = ln(P/CPI), logarithm of “real” index, i.e., corrected for changes in consumer prices_  
+_- lrd   = ln(D/CPI), logarithm of real dividends_  
+_- lpd   = ln(P/D), logarithm of price-dividend ratio_  
+_- ret   = (Pt+ Dt-Pt-1)/Pt-1, annual return on the index, including dividends_  
+_- TSpr  = Rl-Rs, difference between long- and short-term interest rate (term spread)The file also contains up to 3 lags of the (lower case) variables, indicated by the extension “j”,j= 1,2,3._  
+
+Read data:
+```{r}
+MyQ1Data <- read.csv("https://raw.githubusercontent.com/rutgerg/econometrics_assigment_3/master/SP500.csv")
+```
+
+## Q1A
+*Test for a unit root in lrp,lrd, Rs and Rl. Motivate your choice between either a constant only, or a constant and a linear trend in the test regression. Report and interpret the outcome of the test.*
+
+## Q1B
+*Particular financial theories imply that log (real) stock prices and log (real) dividends should be cointegrated, with a coefficient of 1. Explain that, under the assumption that both prices and dividends have a unit root, this hypothesis can be tested with a unit root test on the variable lpd, and report and interpret the outcome of this test.(The assumption of a unit root in both series may not be supported by your answer to (a); this would have to be included in your discussion.)*
+
+## Q1c
+*We now wish to investigate if the annual returns on the S&P 500 index can be forecasted. First, plot the autocorrelation function of ret, and interpret the outcome. Next, estimate an AR(2) model for ret and test if the lagged returns have zero coefficients (jointly).*
+
+## Q1D
+*Estimate an ADL model with ret as the dependent variable, and with three lags of ret an dthe term spread TSpr as explanatory variables. You may assume that TSpr is stationary). Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
+
+## Q1E
+*Select an appropriate lag order p(motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
+
