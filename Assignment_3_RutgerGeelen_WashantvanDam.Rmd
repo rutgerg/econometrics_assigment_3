@@ -36,7 +36,7 @@ _- CPI   Consumper price index_
 _- lrp   = ln(P/CPI), logarithm of “real” index, i.e., corrected for changes in consumer prices_  
 _- lrd   = ln(D/CPI), logarithm of real dividends_  
 _- lpd   = ln(P/D), logarithm of price-dividend ratio_  
-_- ret   = (Pt+ Dt-Pt-1)/Pt-1, annual return on the index, including dividends_  
+_- ret   = (Pt + Dt - Pt-1)/Pt-1, annual return on the index, including dividends_  
 _- TSpr  = Rl-Rs, difference between long- and short-term interest rate (term spread)The file also contains up to 3 lags of the (lower case) variables, indicated by the extension “j”,j= 1,2,3._  
 
 Read data:
@@ -45,7 +45,15 @@ MyQ1Data <- read.csv("https://raw.githubusercontent.com/rutgerg/econometrics_ass
 ```
 
 ## Q1A
-*Test for a unit root in lrp,lrd, Rs and Rl. Motivate your choice between either a constant only, or a constant and a linear trend in the test regression. Report and interpret the outcome of the test.*
+*Test for a unit root in lrp, lrd, Rs and Rl. Motivate your choice between either a constant only, or a constant and a linear trend in the test regression. Report and interpret the outcome of the test.*
+
+Plot ret over time
+
+```{r echo=FALSE}
+ggplot(MyQ1Data, aes(x=X, y=ret))+ 
+  geom_point() + 
+  theme_bw()
+```
 
 ## Q1B
 *Particular financial theories imply that log (real) stock prices and log (real) dividends should be cointegrated, with a coefficient of 1. Explain that, under the assumption that both prices and dividends have a unit root, this hypothesis can be tested with a unit root test on the variable lpd, and report and interpret the outcome of this test.(The assumption of a unit root in both series may not be supported by your answer to (a); this would have to be included in your discussion.)*
