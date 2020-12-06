@@ -23,8 +23,9 @@ library ("survival")
 suppressMessages (library ("stargazer"))
 library ("rbibutils")
 library ("plm")
-library ("ivreg")
+library ("vars")
 library("urca")
+library("dynlm")
 ```
 
 # Q1
@@ -43,6 +44,7 @@ _- TSpr  = Rl-Rs, difference between long- and short-term interest rate (term sp
 Read data:
 ```{r}
 MyQ1Data <- read.csv("https://raw.githubusercontent.com/rutgerg/econometrics_assigment_3/master/SP500.csv")
+MyQ1Data = na.omit(MyQ1Data)
 ```
 
 ## Q1A
@@ -76,14 +78,14 @@ Since the trend is upward we choose the intercept and time trend specification.
 
 Let's test:
 ```{r echo=FALSE}
-tsdata <- ts(MyQ1Data$P,MyQ1Data$X)
-adf1 <- ur.df(tsdata, type = "trend", lags = 5, selectlags = "BIC")
-summary(adf1)
+tsdata1a <- ts(MyQ1Data$P,MyQ1Data$X)
+adf1a <- ur.df(tsdata1a, type = "trend", lags = 5, selectlags = "BIC")
+summary(adf1a)
 ```
 We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
 ```{r echo=FALSE}
-pval <- punitroot(adf1@teststat[1], N=Inf, trend='ct', statistic='t')
-cat("p-value of ADF test:", pval)
+pval1a <- punitroot(adf1a@teststat[1], N=Inf, trend='ct', statistic='t')
+cat("p-value of ADF test:", pval1a)
 ```
 
 Since Padf-value is 0.99 we do not reject H0 so there is non stationary data and have unit root.
@@ -91,12 +93,84 @@ Since Padf-value is 0.99 we do not reject H0 so there is non stationary data and
 ## Q1B
 *Particular financial theories imply that log (real) stock prices and log (real) dividends should be cointegrated, with a coefficient of 1. Explain that, under the assumption that both prices and dividends have a unit root, this hypothesis can be tested with a unit root test on the variable lpd, and report and interpret the outcome of this test.(The assumption of a unit root in both series may not be supported by your answer to (a); this would have to be included in your discussion.)*
 
+Cointegration happens when two or more series share the same stochastic trend. In this csae that makes sense since stockprices rise (cp) with rising dividends because it assumes higher future cashflows. Cointegration says that if both series are non-stationary then difference can be stable or stationary and H0 should be reject in favor of H1. 
+
+Coefficient of 1 assumes thèta = 1
+
+To check we first plot the data:
+```{r echo=FALSE}
+plot(MyQ1Data$X,log(MyQ1Data$lpd),
+     col = "steelblue",
+     lwd = 2,
+     xlab = 'Year',
+     ylab = 'Log S&P 500 index (corrected for CPI)',
+     main = "S&P 500 stock market index")
+```
+It looks like a positive trend; not stationary.
+
+Let's test:
+```{r echo=FALSE}
+tsdata1b <- ts(MyQ1Data$lpd,MyQ1Data$X)
+adf1b <- ur.df(tsdata1b, type = "trend", lags = 5, selectlags = "BIC")
+summary(adf1b)
+```
+
+We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
+```{r echo=FALSE}
+pval1b <- punitroot(adf1b@teststat[1], N=Inf, trend='ct', statistic='t')
+cat("p-value of ADF test:", pval1b)
+```
+
+Since Padf-value is 0.23 we do not reject H0 so there is non stationary data and have unit root. There is not enough evidence to support cointegration. IS THIS A CORRECT CONCLUSION?
+
 ## Q1C
 *We now wish to investigate if the annual returns on the S&P 500 index can be forecasted. First, plot the autocorrelation function of ret, and interpret the outcome. Next, estimate an AR(2) model for ret and test if the lagged returns have zero coefficients (jointly).*
 
+First we plot the data:
+```{r echo=FALSE}
+plot(MyQ1Data$X,MyQ1Data$ret,
+     col = "steelblue",
+     lwd = 2,
+     xlab = 'Year',
+     ylab = 'Annual return on the S&P 500',
+     main = "S&P 500 stock market index")
+```
+The outcome suggest ret is constant and stationary; there is no trend.
+
+Let's test:
+```{r echo=FALSE}
+tsdata1c <- ts(MyQ1Data$ret)
+VARselect(tsdata1c, lag.max=2, type='const')
+```
+
+```{r echo=FALSE}
+#var1c <- VAR(tsdata1c, p=2, type='const')
+#summary(var1c)
+```
+FUNCTION ABOVE GIVE ERRROR? IK WIL MATRIX VAN JAAR EN ret MAAR DAT LUKT NIET.
+
+
 ## Q1D
-*Estimate an ADL model with ret as the dependent variable, and with three lags of ret an dthe term spread TSpr as explanatory variables. You may assume that TSpr is stationary). Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
+*Estimate an ADL model with ret as the dependent variable, and with three lags of ret and the term spread TSpr as explanatory variables. You may assume that TSpr is stationary. Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
+
+
+The Granger causality test Granger is an F test of the null hypothesis that all lags of a variable X included in a time series regression model do not have predictive power for Yt. The Granger causality test does not test whether X actually causes Y but whether the included lags are informative in terms of predicting Y.
+
+F-test for H0 : d1 = ... = dq = 0 (non-causality) in
+Yt =b0 +B1 * Yt-1 +...+bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
+
+ADL(3,2)
+```{r echo=FALSE}
+aq1d  <- dynlm(ret ~ L(ret, 3) + L(TSpr), data=MyQ1Data)
+#coeftest(aq1d, vcov. = sandwich)
+
+#linearHypothesis(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich)
+```
+
+Uncommenting line 167 gives error: "Error in linearHypothesis.lm(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich) : 
+  residual sum of squares is 0 (within rounding error)" must be soemthing wrong
+
 
 ## Q1E
-*Select an appropriate lag order p(motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
+*Select an appropriate lag order p (motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
 
