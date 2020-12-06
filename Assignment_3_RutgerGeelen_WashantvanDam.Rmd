@@ -24,6 +24,7 @@ suppressMessages (library ("stargazer"))
 library ("rbibutils")
 library ("plm")
 library ("ivreg")
+library("urca")
 ```
 
 # Q1
@@ -47,18 +48,50 @@ MyQ1Data <- read.csv("https://raw.githubusercontent.com/rutgerg/econometrics_ass
 ## Q1A
 *Test for a unit root in lrp, lrd, Rs and Rl. Motivate your choice between either a constant only, or a constant and a linear trend in the test regression. Report and interpret the outcome of the test.*
 
-Plot ret over time
+If all roots are greater than 1 in absolute value, the AR(p) series is stationary. If at least one root equals 1, the AR(p) is said to have a unit root and thus has a stochastic trend.
+
+We use The ADF test for a unit autoregressive root tests the hypothesis H0:d=0 (stochastic trend) against the one-sided alternative H1:d<0 (stationarity) using the usual OLS t-statistic.
+
+General specigfication: deltaPt = b0 +  (a * t) + d * Pt-1 + g1 * deltaPt-1 + .... + gp-1 * deltaPt-p+1 + ut
+
+b0 is intercept
+(a * t) is linear time trend
+
+d = B1 + .. + Bp - 1
+
+H0: d = 0 (unit root)
+H1: d < 1 (stationarity)
+
+Intercept only specification only if there is not long term growth in the series (eg interest, inflation, unemployment). Since this is index data we expect intrecept and linear time trend. To check we first plot the data:
 
 ```{r echo=FALSE}
-ggplot(MyQ1Data, aes(x=X, y=ret))+ 
-  geom_point() + 
-  theme_bw()
+plot(MyQ1Data$X,log(MyQ1Data$P),
+     col = "steelblue",
+     lwd = 2,
+     xlab = 'Year',
+     ylab = 'Log S&P 500 index',
+     main = "S&P 500 stock market index")
 ```
+Since the trend is upward we choose the intercept and time trend specification.
+
+Let's test:
+```{r echo=FALSE}
+tsdata <- ts(MyQ1Data$P,MyQ1Data$X)
+adf1 <- ur.df(tsdata, type = "trend", lags = 5, selectlags = "BIC")
+summary(adf1)
+```
+We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
+```{r echo=FALSE}
+pval <- punitroot(adf1@teststat[1], N=Inf, trend='ct', statistic='t')
+cat("p-value of ADF test:", pval)
+```
+
+Since Padf-value is 0.99 we do not reject H0 so there is non stationary data and have unit root.
 
 ## Q1B
 *Particular financial theories imply that log (real) stock prices and log (real) dividends should be cointegrated, with a coefficient of 1. Explain that, under the assumption that both prices and dividends have a unit root, this hypothesis can be tested with a unit root test on the variable lpd, and report and interpret the outcome of this test.(The assumption of a unit root in both series may not be supported by your answer to (a); this would have to be included in your discussion.)*
 
-## Q1c
+## Q1C
 *We now wish to investigate if the annual returns on the S&P 500 index can be forecasted. First, plot the autocorrelation function of ret, and interpret the outcome. Next, estimate an AR(2) model for ret and test if the lagged returns have zero coefficients (jointly).*
 
 ## Q1D
