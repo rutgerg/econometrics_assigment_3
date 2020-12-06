@@ -153,7 +153,6 @@ FUNCTION ABOVE GIVE ERRROR? IK WIL MATRIX VAN JAAR EN ret MAAR DAT LUKT NIET.
 ## Q1D
 *Estimate an ADL model with ret as the dependent variable, and with three lags of ret and the term spread TSpr as explanatory variables. You may assume that TSpr is stationary. Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
 
-
 The Granger causality test Granger is an F test of the null hypothesis that all lags of a variable X included in a time series regression model do not have predictive power for Yt. The Granger causality test does not test whether X actually causes Y but whether the included lags are informative in terms of predicting Y.
 
 F-test for H0 : d1 = ... = dq = 0 (non-causality) in
@@ -161,16 +160,21 @@ Yt =b0 +B1 * Yt-1 +...+bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
 
 ADL(3,2)
 ```{r echo=FALSE}
-aq1d  <- dynlm(ret ~ L(ret, 3) + L(TSpr), data=MyQ1Data)
-#coeftest(aq1d, vcov. = sandwich)
+aq1d  <- dynlm(ret ~ L(ret,1) + L(ret, 2) + L(ret, 3) + L(TSpr,1) + L(TSpr,2) + L(TSpr,3), data=MyQ1Data)
+coeftest(aq1d, vcov. = sandwich)
 
-#linearHypothesis(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich)
+#linearHypothesis(aq1d, c("L(ret)=0","L(ret,2)=0","L(ret,3)=0","L(TSpr)=0","L(TSpr,2)=0","L(TSpr,3)=0"), vcov. = sandwich)
+
 ```
 
-Uncommenting line 167 gives error: "Error in linearHypothesis.lm(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich) : 
-  residual sum of squares is 0 (within rounding error)" must be soemthing wrong
+Uncommenting line 166 gives error: "Error in linearHypothesis.lm(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich) : 
+  residual sum of squares is 0 (within rounding error)" must be something wrong
 
 
 ## Q1E
 *Select an appropriate lag order p (motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
+
+BIC vs AIC
+
+BIC(K) = ln(SSR(K)/T) + K x ln(T)/T
 
