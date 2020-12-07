@@ -100,6 +100,7 @@ Cointegration happens when two or more series share the same stochastic trend. I
 Coefficient of 1 assumes thèta = 1
 
 To check we first plot the data:
+
 ```{r echo=FALSE}
 plot(MyQ1Data$X,log(MyQ1Data$lpd),
      col = "steelblue",
@@ -129,6 +130,7 @@ Since Padf-value is 0.23 we do not reject H0 so there is non stationary data and
 *We now wish to investigate if the annual returns on the S&P 500 index can be forecasted. First, plot the autocorrelation function of ret, and interpret the outcome. Next, estimate an AR(2) model for ret and test if the lagged returns have zero coefficients (jointly).*
 
 First we plot the data:
+
 ```{r echo=FALSE}
 plot(MyQ1Data$X,MyQ1Data$ret,
      col = "steelblue",
