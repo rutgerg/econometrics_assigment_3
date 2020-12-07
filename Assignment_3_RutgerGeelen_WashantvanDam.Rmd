@@ -160,15 +160,15 @@ FUNCTION ABOVE GIVE ERRROR? IK WIL MATRIX VAN JAAR EN ret MAAR DAT LUKT NIET.
 The Granger causality test does not test whether X actually causes Y but whether the included lags are informative in terms of predicting Y.
 
 F-test for H0 : d1 = ... = dq = 0 (non-causality) in
-Yt =b0 +B1 * Yt-1 +...+bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
+Yt =b0 +B1 * Yt-1 +...+ bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
 
 ADL(3,1) model and testing for joint predictiveness.
 ```{r echo=FALSE}
-aq1d  <- lm(ret ~ ret_1 + ret_2 + ret_3 + TSpr, data=MyQ1Data)
-linearHypothesis(aq1d, c("ret_1=0","ret_2=0","ret_3=0","TSpr=0"), vcov = vcovHC(aq1d,"HC1"))
+aq1d  <- lm(ret ~ ret_1 + ret_2 + ret_3 + TSpr_1 + TSpr_2 + TSpr_3, data=MyQ1Data)
+linearHypothesis(aq1d, c("ret_1=0","ret_2=0","ret_3=0","TSpr_1=0","TSpr_2=0","TSpr_3=0"), vcov = vcovHC(aq1d,"HC1"))
 ```
 
-Conclusion: p-value is small so we do not reject H0. Hence the variables have predictive power.
+Conclusion: p-value is small and F statistic high significance so we do not reject H0. Hence the variables have predictive power.
 
 ## Q1E
 *Select an appropriate lag order p (motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
