@@ -171,15 +171,49 @@ Conclusion: p-value is small so we do not reject H0. Hence the variables have pr
 ## Q1E
 *Select an appropriate lag order p (motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
 
-```{r echo=FALSE}
-aq1e  <- lm(ret ~ ret_1 + ret_2 + ret_3 + TSpr, data=MyQ1Data)
-linearHypothesis(aq1e, c("ret_1=0","ret_2=0","ret_3=0","TSpr=0"), vcov = vcovHC(aq1e,"HC1"))
-```
-
-
-BIC vs AIC
+We calculate the appropriate log order using BIC
 
 BIC(K) = ln(SSR(K)/T) + K x ln(T)/T
 
-HOW TO GET SSR?
+```{r echo=FALSE}
+# compute BIC for AR model objects of class 'dynlm'
+BIC <- function(model) {
+  
+  ssr <- sum(model$residuals^2)
+  t <- length(model$residuals)
+  npar <- length(model$coef)
+  
+  return(
+    round(c("p" = npar - 1,
+          "BIC" = log(ssr/t) + npar * log(t)/t,
+          "R2" = summary(model)$r.squared), 4)
+  )
+}
 
+order <- 1:12
+
+BICs <- sapply(order, function(x) 
+        "AR" = BIC(dynlm(ts(MyQ1Data$ret) ~ L(ts(MyQ1Data$ret), 1:x) + L(ts(MyQ1Data$TSpr), 1:x))))
+BICs
+```
+```{r echo=FALSE}
+BICs[, which.min(BICs[2, ])]
+```
+p with minimum BIC: 2
+
+The resulting VAR(2) model:
+```{r echo=FALSE}
+VAR_EQ1 <- dynlm(ts(MyQ1Data$ret) ~ L(ts(MyQ1Data$ret), 1:2) + L(ts(MyQ1Data$TSpr), 1:2))
+VAR_EQ2 <- dynlm(ts(MyQ1Data$TSpr) ~ L(ts(MyQ1Data$ret), 1:2) + L(ts(MyQ1Data$TSpr), 1:2))
+coeftest(VAR_EQ1, vcov. = sandwich)
+coeftest(VAR_EQ2, vcov. = sandwich)
+```
+
+ret t = 0.12 + 0.06 * ret t-1 - 0.25 * ret t-2 - 0.01 * Tspr t-1 + 0.02 * Tspr t-2
+Tspr t = 0.29 - 0.68 * ret t-1 - 1.89 * ret t-2 + 0.58 * Tspr t-1 + 0.13 * Tspr t-2
+
+ret:
+The negative -0.25 with a 99% CI for ret t-2 is peculiar since we would not expect a strong negative relation between ret now and 2 year ago.
+
+Tspr:
+The positive relation between Tspr now and past makes sense. A negative relation with ret would also make sense since higher interest spread might lure investors away from investing in the index and in stead invest in LT interest related products like bonds.
