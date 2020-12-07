@@ -76,6 +76,7 @@ plot(MyQ1Data$X,log(MyQ1Data$P),
      ylab = 'Log S&P 500 index',
      main = "S&P 500 stock market index")
 ```
+
 Since the trend is upward we choose the intercept and time trend specification.
 
 Let's test:
@@ -84,6 +85,7 @@ tsdata1a <- ts(MyQ1Data$P,MyQ1Data$X)
 adf1a <- ur.df(tsdata1a, type = "trend", lags = 5, selectlags = "BIC")
 summary(adf1a)
 ```
+
 We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
 ```{r echo=FALSE}
 pval1a <- punitroot(adf1a@teststat[1], N=Inf, trend='ct', statistic='t')
@@ -109,9 +111,11 @@ plot(MyQ1Data$X,log(MyQ1Data$lpd),
      ylab = 'Log S&P 500 index (corrected for CPI)',
      main = "S&P 500 stock market index")
 ```
+
 It looks like a positive trend; not stationary.
 
 Let's test:
+
 ```{r echo=FALSE}
 tsdata1b <- ts(MyQ1Data$lpd,MyQ1Data$X)
 adf1b <- ur.df(tsdata1b, type = "trend", lags = 5, selectlags = "BIC")
@@ -119,6 +123,7 @@ summary(adf1b)
 ```
 
 We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
+
 ```{r echo=FALSE}
 pval1b <- punitroot(adf1b@teststat[1], N=Inf, trend='ct', statistic='t')
 cat("p-value of ADF test:", pval1b)
@@ -139,20 +144,22 @@ plot(MyQ1Data$X,MyQ1Data$ret,
      ylab = 'Annual return on the S&P 500',
      main = "S&P 500 stock market index")
 ```
+
 The outcome suggest ret is constant and stationary; there is no trend.
 
-Let's test:
+Let's test AR(2):
+
 ```{r echo=FALSE}
-tsdata1c <- ts(MyQ1Data$ret)
-VARselect(tsdata1c, lag.max=2, type='const')
+aq1c  <- lm(ret ~ ret_1 + ret_2, data=MyQ1Data)
+linearHypothesis(aq1c, c("ret_1=0","ret_2=0"), vcov = vcovHC(aq1c,"HC1"))
 ```
+
+F statistic is significant at 5% level so we don't reject H0 that ret_1 and ret_2 are jointly 0.
 
 ```{r echo=FALSE}
 #var1c <- VAR(tsdata1c, p=2, type='const')
 #summary(var1c)
 ```
-FUNCTION ABOVE GIVE ERRROR? IK WIL MATRIX VAN JAAR EN ret MAAR DAT LUKT NIET.
-
 
 ## Q1D
 *Estimate an ADL model with ret as the dependent variable, and with three lags of ret and the term spread TSpr as explanatory variables. You may assume that TSpr is stationary. Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
@@ -163,6 +170,7 @@ F-test for H0 : d1 = ... = dq = 0 (non-causality) in
 Yt =b0 +B1 * Yt-1 +...+ bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
 
 ADL(3,1) model and testing for joint predictiveness.
+
 ```{r echo=FALSE}
 aq1d  <- lm(ret ~ ret_1 + ret_2 + ret_3 + TSpr_1 + TSpr_2 + TSpr_3, data=MyQ1Data)
 linearHypothesis(aq1d, c("ret_1=0","ret_2=0","ret_3=0","TSpr_1=0","TSpr_2=0","TSpr_3=0"), vcov = vcovHC(aq1d,"HC1"))
@@ -201,6 +209,7 @@ BICs
 ```{r echo=FALSE}
 BICs[, which.min(BICs[2, ])]
 ```
+
 p with minimum BIC: 2
 
 The resulting VAR(2) model:
