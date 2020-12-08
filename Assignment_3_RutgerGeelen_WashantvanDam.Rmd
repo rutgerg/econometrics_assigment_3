@@ -220,6 +220,13 @@ ret t = 0.12 + 0.06 * ret t-1 - 0.25 * ret t-2 - 0.01 * Tspr t-1 + 0.02 * Tspr t
 
 Tspr t = 0.29 - 0.68 * ret t-1 - 1.89 * ret t-2 + 0.58 * Tspr t-1 + 0.13 * Tspr t-2
 
+Running the VAR function gives the same estimates:
+```{r}
+VAR_data <- cbind("ret" = MyQ1Data$ret, "TSpr" = MyQ1Data$TSpr)
+VAR_est <- VAR(y = VAR_data, p=2, type="const")
+summary(VAR_est)
+```
+
 ret:
 The negative -0.25 with a 99% CI for ret t-2 is peculiar since we would not expect a strong negative relation between ret now and 2 year ago.
 
