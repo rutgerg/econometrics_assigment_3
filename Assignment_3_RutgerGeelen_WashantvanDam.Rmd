@@ -12,7 +12,7 @@ output:
 ## Preparation
 
 Clear workspace and load the required packages:
-```{r}
+```{r echo=FALSE}
 rm(list=ls())
 suppressMessages(library("lmtest"))
 suppressMessages(library("car"))
@@ -68,7 +68,7 @@ H1: d < 0 (stationarity)
 
 Intercept only specification only if there is not long term growth in the series (eg interest, inflation, unemployment). Since this is index data we expect intercept and linear time trend. To check we first plot the data:
 
-```{r echo=FALSE}
+```{r}
 plot(MyQ1Data$X,log(MyQ1Data$P),
      col = "steelblue",
      lwd = 2,
@@ -80,7 +80,7 @@ plot(MyQ1Data$X,log(MyQ1Data$P),
 Since we she a stochastic upward trend we choose the specification including intercept and time trend.
 
 Let's do the Augmented Dickey-Fuller (ADF) test with maximum 5 lags:
-```{r echo=FALSE}
+```{r}
 tsdata1a <- ts(MyQ1Data$P,MyQ1Data$X)
 adf1a <- ur.df(tsdata1a, type = "trend", lags = 5, selectlags = "BIC")
 summary(adf1a)
@@ -88,7 +88,7 @@ summary(adf1a)
 
 We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
 
-```{r echo=FALSE}
+```{r}
 pval1a <- punitroot(adf1a@teststat[1], N=Inf, trend='ct', statistic='t')
 cat("p-value of ADF test:", pval1a)
 ```
@@ -104,7 +104,7 @@ Coefficient of 1 assumes thèta = 1
 
 To check we first plot the data:
 
-```{r echo=FALSE}
+```{r}
 plot(MyQ1Data$X,log(MyQ1Data$lpd),
      col = "steelblue",
      lwd = 2,
@@ -117,7 +117,7 @@ It looks like a positive trend; not stationary.
 
 Let's test:
 
-```{r echo=FALSE}
+```{r}
 tsdata1b <- ts(MyQ1Data$lpd,MyQ1Data$X)
 adf1b <- ur.df(tsdata1b, type = "trend", lags = 5, selectlags = "BIC")
 summary(adf1b)
@@ -125,7 +125,7 @@ summary(adf1b)
 
 Again we need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
 
-```{r echo=FALSE}
+```{r}
 pval1b <- punitroot(adf1b@teststat[1], N=Inf, trend='ct', statistic='t')
 cat("p-value of ADF test:", pval1b)
 ```
@@ -137,7 +137,7 @@ Since Padf-value is 0.23 we do not reject H0 so there is non-stationary data and
 
 First we plot the data:
 
-```{r echo=FALSE}
+```{r}
 plot(MyQ1Data$X,MyQ1Data$ret,
      col = "steelblue",
      lwd = 2,
@@ -150,17 +150,12 @@ The outcome suggest ret is constant and stationary; there is no trend.
 
 Let's test AR(2):
 
-```{r echo=FALSE}
+```{r}
 aq1c  <- lm(ret ~ ret_1 + ret_2, data=MyQ1Data)
 linearHypothesis(aq1c, c("ret_1=0","ret_2=0"), vcov = vcovHC(aq1c,"HC1"))
 ```
 
 F statistic is significant at 5% level so we don't reject H0 that ret_1 and ret_2 are jointly 0.
-
-```{r echo=FALSE}
-#var1c <- VAR(tsdata1c, p=2, type='const')
-#summary(var1c)
-```
 
 ## Q1D
 *Estimate an ADL model with ret as the dependent variable, and with three lags of ret and the term spread TSpr as explanatory variables. You may assume that TSpr is stationary. Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
@@ -172,7 +167,7 @@ Yt =b0 +B1 * Yt-1 +...+ bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
 
 ADL(3,3) model and testing for joint predictiveness.
 
-```{r echo=FALSE}
+```{r}
 aq1d  <- lm(ret ~ ret_1 + ret_2 + ret_3 + TSpr_1 + TSpr_2 + TSpr_3, data=MyQ1Data)
 linearHypothesis(aq1d, c("ret_1=0","ret_2=0","ret_3=0","TSpr_1=0","TSpr_2=0","TSpr_3=0"), vcov = vcovHC(aq1d,"HC1"))
 ```
@@ -186,8 +181,8 @@ We calculate the appropriate log order using BIC
 
 BIC(K) = ln(SSR(K)/T) + K x ln(T)/T
 
-```{r echo=FALSE}
-# compute BIC for AR model objects of class 'dynlm'
+```{r}
+# BIC calculation below used from https://www.econometrics-with-r.org/14-6-llsuic.html
 BIC <- function(model) {
   
   ssr <- sum(model$residuals^2)
@@ -207,14 +202,14 @@ BICs <- sapply(order, function(x)
         "AR" = BIC(dynlm(ts(MyQ1Data$ret) ~ L(ts(MyQ1Data$ret), 1:x) + L(ts(MyQ1Data$TSpr), 1:x))))
 BICs
 ```
-```{r echo=FALSE}
+```{r}
 BICs[, which.min(BICs[2, ])]
 ```
 
 p with minimum BIC: 2
 
 The resulting VAR(2) model:
-```{r echo=FALSE}
+```{r}
 VAR_EQ1 <- dynlm(ts(MyQ1Data$ret) ~ L(ts(MyQ1Data$ret), 1:2) + L(ts(MyQ1Data$TSpr), 1:2))
 VAR_EQ2 <- dynlm(ts(MyQ1Data$TSpr) ~ L(ts(MyQ1Data$ret), 1:2) + L(ts(MyQ1Data$TSpr), 1:2))
 coeftest(VAR_EQ1, vcov. = sandwich)
@@ -222,6 +217,7 @@ coeftest(VAR_EQ2, vcov. = sandwich)
 ```
 
 ret t = 0.12 + 0.06 * ret t-1 - 0.25 * ret t-2 - 0.01 * Tspr t-1 + 0.02 * Tspr t-2
+
 Tspr t = 0.29 - 0.68 * ret t-1 - 1.89 * ret t-2 + 0.58 * Tspr t-1 + 0.13 * Tspr t-2
 
 ret:
