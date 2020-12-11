@@ -12,7 +12,7 @@ output:
 ## Preparation
 
 Clear workspace and load the required packages:
-```{r}
+```{r echo=FALSE}
 rm(list=ls())
 suppressMessages(library("lmtest"))
 suppressMessages(library("car"))
@@ -23,7 +23,7 @@ library ("survival")
 suppressMessages (library ("stargazer"))
 library ("rbibutils")
 library ("plm")
-library ("vars")
+suppressMessages (library ("vars"))
 library("urca")
 library("dynlm")
 ```
@@ -39,7 +39,9 @@ _- lrp   = ln(P/CPI), logarithm of “real” index, i.e., corrected for changes
 _- lrd   = ln(D/CPI), logarithm of real dividends_  
 _- lpd   = ln(P/D), logarithm of price-dividend ratio_  
 _- ret   = (Pt + Dt - Pt-1)/Pt-1, annual return on the index, including dividends_  
-_- TSpr  = Rl-Rs, difference between long- and short-term interest rate (term spread)The file also contains up to 3 lags of the (lower case) variables, indicated by the extension “j”,j= 1,2,3._  
+_- TSpr  = Rl-Rs, difference between long- and short-term interest rate (term spread)_
+
+_The file also contains up to 3 lags of the (lower case) variables, indicated by the extension “j”,j= 1,2,3._  
 
 Read data:
 ```{r}
@@ -52,9 +54,9 @@ MyQ1Data = na.omit(MyQ1Data)
 
 If all roots are greater than 1 in absolute value, the AR(p) series is stationary. If at least one root equals 1, the AR(p) is said to have a unit root and thus has a stochastic trend.
 
-We use The ADF test for a unit autoregressive root tests the hypothesis H0:d=0 (stochastic trend) against the one-sided alternative H1:d<0 (stationarity) using the usual OLS t-statistic.
+We use the ADF test for a unit auto-regressive root to test the hypothesis H0:d=0 (stochastic trend) against the one-sided alternative H1:d<0 (stationarity) using the usual OLS t-statistic.
 
-General specigfication: deltaPt = b0 +  (a * t) + d * Pt-1 + g1 * deltaPt-1 + .... + gp-1 * deltaPt-p+1 + ut
+General specification: deltaPt = b0 +  (a * t) + d * Pt-1 + g1 * deltaPt-1 + .... + gp-1 * deltaPt-p+1 + ut
 
 b0 is intercept
 (a * t) is linear time trend
@@ -62,11 +64,11 @@ b0 is intercept
 d = B1 + .. + Bp - 1
 
 H0: d = 0 (unit root)
-H1: d < 1 (stationarity)
+H1: d < 0 (stationarity)
 
-Intercept only specification only if there is not long term growth in the series (eg interest, inflation, unemployment). Since this is index data we expect intrecept and linear time trend. To check we first plot the data:
+Intercept only specification only if there is not long term growth in the series (eg interest, inflation, unemployment). Since this is index data we expect intercept and linear time trend. To check we first plot the data:
 
-```{r echo=FALSE}
+```{r}
 plot(MyQ1Data$X,log(MyQ1Data$P),
      col = "steelblue",
      lwd = 2,
@@ -74,16 +76,19 @@ plot(MyQ1Data$X,log(MyQ1Data$P),
      ylab = 'Log S&P 500 index',
      main = "S&P 500 stock market index")
 ```
-Since the trend is upward we choose the intercept and time trend specification.
 
-Let's test:
-```{r echo=FALSE}
+Since we she a stochastic upward trend we choose the specification including intercept and time trend.
+
+Let's do the Augmented Dickey-Fuller (ADF) test with maximum 5 lags:
+```{r}
 tsdata1a <- ts(MyQ1Data$P,MyQ1Data$X)
 adf1a <- ur.df(tsdata1a, type = "trend", lags = 5, selectlags = "BIC")
 summary(adf1a)
 ```
+
 We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
-```{r echo=FALSE}
+
+```{r}
 pval1a <- punitroot(adf1a@teststat[1], N=Inf, trend='ct', statistic='t')
 cat("p-value of ADF test:", pval1a)
 ```
@@ -93,12 +98,13 @@ Since Padf-value is 0.99 we do not reject H0 so there is non stationary data and
 ## Q1B
 *Particular financial theories imply that log (real) stock prices and log (real) dividends should be cointegrated, with a coefficient of 1. Explain that, under the assumption that both prices and dividends have a unit root, this hypothesis can be tested with a unit root test on the variable lpd, and report and interpret the outcome of this test.(The assumption of a unit root in both series may not be supported by your answer to (a); this would have to be included in your discussion.)*
 
-Cointegration happens when two or more series share the same stochastic trend. In this csae that makes sense since stockprices rise (cp) with rising dividends because it assumes higher future cashflows. Cointegration says that if both series are non-stationary then difference can be stable or stationary and H0 should be reject in favor of H1. 
+Cointegration happens when two or more series share the same stochastic trend. In this case that makes sense since stockprices rise (cp) with rising dividends because it assumes higher future cashflows. Cointegration says that if both series are non-stationary then difference can be stable and stationary and H0 should be rejected in favor of H1. 
 
 Coefficient of 1 assumes thèta = 1
 
 To check we first plot the data:
-```{r echo=FALSE}
+
+```{r}
 plot(MyQ1Data$X,log(MyQ1Data$lpd),
      col = "steelblue",
      lwd = 2,
@@ -106,28 +112,32 @@ plot(MyQ1Data$X,log(MyQ1Data$lpd),
      ylab = 'Log S&P 500 index (corrected for CPI)',
      main = "S&P 500 stock market index")
 ```
+
 It looks like a positive trend; not stationary.
 
 Let's test:
-```{r echo=FALSE}
+
+```{r}
 tsdata1b <- ts(MyQ1Data$lpd,MyQ1Data$X)
 adf1b <- ur.df(tsdata1b, type = "trend", lags = 5, selectlags = "BIC")
 summary(adf1b)
 ```
 
-We need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
-```{r echo=FALSE}
+Again we need to recalculate the p-value since we can not use the p-value from the linear regression above which assumes normal distribution and 2 sided test.
+
+```{r}
 pval1b <- punitroot(adf1b@teststat[1], N=Inf, trend='ct', statistic='t')
 cat("p-value of ADF test:", pval1b)
 ```
 
-Since Padf-value is 0.23 we do not reject H0 so there is non stationary data and have unit root. There is not enough evidence to support cointegration. IS THIS A CORRECT CONCLUSION?
+Since Padf-value is 0.23 we do not reject H0 so there is non-stationary data and have unit root. There is not enough evidence to support cointegration.
 
 ## Q1C
 *We now wish to investigate if the annual returns on the S&P 500 index can be forecasted. First, plot the autocorrelation function of ret, and interpret the outcome. Next, estimate an AR(2) model for ret and test if the lagged returns have zero coefficients (jointly).*
 
 First we plot the data:
-```{r echo=FALSE}
+
+```{r}
 plot(MyQ1Data$X,MyQ1Data$ret,
      col = "steelblue",
      lwd = 2,
@@ -135,42 +145,90 @@ plot(MyQ1Data$X,MyQ1Data$ret,
      ylab = 'Annual return on the S&P 500',
      main = "S&P 500 stock market index")
 ```
+
 The outcome suggest ret is constant and stationary; there is no trend.
 
-Let's test:
-```{r echo=FALSE}
-tsdata1c <- ts(MyQ1Data$ret)
-VARselect(tsdata1c, lag.max=2, type='const')
+Let's test AR(2):
+
+```{r}
+aq1c  <- lm(ret ~ ret_1 + ret_2, data=MyQ1Data)
+linearHypothesis(aq1c, c("ret_1=0","ret_2=0"), vcov = vcovHC(aq1c,"HC1"))
 ```
 
-```{r echo=FALSE}
-#var1c <- VAR(tsdata1c, p=2, type='const')
-#summary(var1c)
-```
-FUNCTION ABOVE GIVE ERRROR? IK WIL MATRIX VAN JAAR EN ret MAAR DAT LUKT NIET.
-
+F statistic is significant at 5% level so we don't reject H0 that ret_1 and ret_2 are jointly 0.
 
 ## Q1D
 *Estimate an ADL model with ret as the dependent variable, and with three lags of ret and the term spread TSpr as explanatory variables. You may assume that TSpr is stationary. Carry out a Granger-causality test to see if the term spread Granger-causes returns. Interpret the outcome.*
 
-
-The Granger causality test Granger is an F test of the null hypothesis that all lags of a variable X included in a time series regression model do not have predictive power for Yt. The Granger causality test does not test whether X actually causes Y but whether the included lags are informative in terms of predicting Y.
+The Granger causality test does not test whether X actually causes Y but whether the included lags are informative in terms of predicting Y.
 
 F-test for H0 : d1 = ... = dq = 0 (non-causality) in
-Yt =b0 +B1 * Yt-1 +...+bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
+Yt =b0 +B1 * Yt-1 +...+ bp * Yt-p + d1 * Xt-1 +...+ dq * Xt-q + ut.
 
-ADL(3,2)
-```{r echo=FALSE}
-aq1d  <- dynlm(ret ~ L(ret, 3) + L(TSpr), data=MyQ1Data)
-#coeftest(aq1d, vcov. = sandwich)
+ADL(3,3) model and testing for joint predictiveness.
 
-#linearHypothesis(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich)
+```{r}
+aq1d  <- lm(ret ~ ret_1 + ret_2 + ret_3 + TSpr_1 + TSpr_2 + TSpr_3, data=MyQ1Data)
+linearHypothesis(aq1d, c("ret_1=0","ret_2=0","ret_3=0","TSpr_1=0","TSpr_2=0","TSpr_3=0"), vcov = vcovHC(aq1d,"HC1"))
 ```
 
-Uncommenting line 167 gives error: "Error in linearHypothesis.lm(aq1d, c("L(ret,3)=0", "L(TSpr)=0"), vcov. = sandwich) : 
-  residual sum of squares is 0 (within rounding error)" must be soemthing wrong
-
+Conclusion: p-value is small and F statistic high significance so we do not reject H0. Hence the variables have predictive power.
 
 ## Q1E
 *Select an appropriate lag order p (motivate your choice), and estimate the resulting VAR(p)model for ret and TSpr jointly. Report and interpret the outcomes, focusing in particular on the difference in predictability of the two time series.*
 
+We calculate the appropriate log order using BIC
+
+BIC(K) = ln(SSR(K)/T) + K x ln(T)/T
+
+```{r}
+# BIC calculation below used from https://www.econometrics-with-r.org/14-6-llsuic.html
+BIC <- function(model) {
+  
+  ssr <- sum(model$residuals^2)
+  t <- length(model$residuals)
+  npar <- length(model$coef)
+  
+  return(
+    round(c("p" = npar - 1,
+          "BIC" = log(ssr/t) + npar * log(t)/t,
+          "R2" = summary(model)$r.squared), 4)
+  )
+}
+
+order <- 1:12
+
+BICs <- sapply(order, function(x) 
+        "AR" = BIC(dynlm(ts(MyQ1Data$ret) ~ L(ts(MyQ1Data$ret), 1:x) + L(ts(MyQ1Data$TSpr), 1:x))))
+BICs
+```
+```{r}
+BICs[, which.min(BICs[2, ])]
+```
+
+p with minimum BIC: 2
+
+The resulting VAR(2) model:
+```{r}
+VAR_EQ1 <- dynlm(ts(MyQ1Data$ret) ~ L(ts(MyQ1Data$ret), 1:2) + L(ts(MyQ1Data$TSpr), 1:2))
+VAR_EQ2 <- dynlm(ts(MyQ1Data$TSpr) ~ L(ts(MyQ1Data$ret), 1:2) + L(ts(MyQ1Data$TSpr), 1:2))
+coeftest(VAR_EQ1, vcov. = sandwich)
+coeftest(VAR_EQ2, vcov. = sandwich)
+```
+
+ret t = 0.12 + 0.06 * ret t-1 - 0.25 * ret t-2 - 0.01 * Tspr t-1 + 0.02 * Tspr t-2
+
+Tspr t = 0.29 - 0.68 * ret t-1 - 1.89 * ret t-2 + 0.58 * Tspr t-1 + 0.13 * Tspr t-2
+
+Running the VAR function gives the same estimates:
+```{r}
+VAR_data <- cbind("ret" = MyQ1Data$ret, "TSpr" = MyQ1Data$TSpr)
+VAR_est <- VAR(y = VAR_data, p=2, type="const")
+summary(VAR_est)
+```
+
+ret:
+The negative -0.25 with a 99% CI for ret t-2 is peculiar since we would not expect a strong negative relation between ret now and 2 year ago.
+
+Tspr:
+The positive relation between Tspr now and past makes sense. A negative relation with ret would also make sense since higher interest spread might lure investors away from investing in the index and in stead invest in LT interest related products like bonds.
